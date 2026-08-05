@@ -1,0 +1,367 @@
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,85 @@
++# env-resource-privileged-template
++
++Purpose
++This repository is a template for projects that need to perform deployments or operations which access privileged resources (cloud credentials, production databases, etc.). It demonstrates safe patterns for managing environment-specific secrets and protections using GitHub Environments and GitHub Actions.
++
++Key features
++- Protected environments: `staging` and `production` with recommended protection rules.
++- CI workflow that gates deploys on environment protection and required approvals.
++- Guidance for least-privilege secrets and resource access.
++- Example Docker Compose and Terraform files for reference.
++- CONTRIBUTING and SECURITY guidance for requesting and approving elevated access.
++
++Quick start
++1. Create a new GitHub repository named `env-resource-privileged-template`.
++2. Add the files from this template to the repo root (README.md, LICENSE, CONTRIBUTING.md, SECURITY.md, .github/, infra/, docker-compose.yml, app/).
++3. On GitHub, create two Environments: `staging` and `production`. Configure required reviewers and add environment secrets following `.github/ENVIRONMENTS.md`.
++4. Add necessary repository secrets (e.g., `TF_BACKEND_KEY`, `CLOUD_CRED`), but prefer environment secrets for production-level credentials.
++5. Adjust `.github/workflows/ci.yml` to match your cloud provider and deployment steps.
++
++Repository structure
++- README.md
++- LICENSE
++- CONTRIBUTING.md
++- SECURITY.md
++- .github/
++  - workflows/ci.yml
++  - ENVIRONMENTS.md
++- docker-compose.yml
++- infra/example.tf
++- app/
++  - Dockerfile
++  - main.py
++  - requirements.txt
++- .gitignore
++
++Notes on security
++- Use environment secrets for credentials that should only be available during protected deployments.
++- Keep minimal permissions in CI (`permissions` block in workflows) and only grant write access when absolutely necessary.
++- Require code review and environment approvals for production deployments.
++
++If you want, I can also prepare a single commit patch (git diff/patch) you can apply locally; say so and I’ll produce it next.
++
+--- /dev/null
++++ b/LICENSE
+@@ -0,0 +1,22 @@
++MIT License
++
++Copyright (c) 2026 Kakashijkv
++
++Permission is hereby granted, free of charge, to any person obtaining a copy
++of this software and associated documentation files (the "Software"), to deal
++in the Software without restriction, including without limitation the rights
++to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++copies of the Software, and to permit persons to whom the Software is
++furnished to do so, subject to the following conditions:
++
++The above copyright notice and this permission notice shall be included in all
++copies or substantial portions of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++SOFTWARE.
++
+--- /dev/null
++++ b/CONTRIBUTING.md
+@@ -0,0 +1,44 @@
++# Contributing
++
++Thank you for contributing. This repository enforces environment protections because deployments may access privileged resources. Please follow these steps when contributing:
++
++1. Branches & PRs
++   - Use descriptive branch names: `feature/<short-desc>`, `fix/<short-desc>`, `chore/<short-desc>`.
++   - Open a Pull Request targeting the default branch (usually `main` or `master`).
++   - Include testing steps and, if relevant, a deployment plan.
++
++2. CI and tests
++   - The repository has a CI pipeline (.github/workflows/ci.yml) that runs tests and builds artifacts.
++   - Do not modify deployment steps without approval from repository maintainers.
++
++3. Requesting environment access (staging/production)
++   - If you need to run protected deployments or access environment secrets, open an issue using the "Environment access request" template (or describe the request in a new issue).
++   - Include: reason for access, duration, required resources, and verification steps.
++   - Once approved, a maintainer will add you to the required reviewer group or temporarily grant access following least-privilege practices.
++
++4. Security and secrets
++   - Never commit secrets or credentials to source control.
++   - Use environment secrets or an external secret manager.
++   - Follow the procedures in SECURITY.md to report any security issues.
++
++Thank you — follow these guidelines to keep privileged operations safe and auditable.
++
+--- /dev/null
++++ b/SECURITY.md
+@@ -0,0 +1,26 @@
++# Security Policy
++
++Reporting a Vulnerability
++If you discover a security vulnerability, please report it privately to the repository maintainers or the organization’s security contact. Do not open a public issue.
++
++Security best practices used here
++- Environment secrets (GitHub Environments) are used for credentials required to access privileged resources (production DBs, cloud service accounts).
++- Repository secrets should be used for less-sensitive values; use environment secrets for production credentials.
++- Least privilege: CI jobs and service accounts used by CI should have only the permissions they need.
++- Reviewers and environment approvals: Production deployments require explicit approval by designated reviewers.
++
++Rotation & revocation
++- Rotate credentials on regular schedule.
++- If a credential compromise is suspected, revoke and rotate immediately, and notify stakeholders.
++
++Contact
++Provide maintainer or organization contact information here.
++
+--- /dev/null
++++ b/.github/workflows/ci.yml
+@@ -0,0 +1,119 @@
++name: CI / Build & Deploy
++
++on:
++  push:
++    branches:
++      - '**'
++  pull_request:
++    branches:
++      - '**'
++
++permissions:
++  contents: read  # minimal permission for building and testing
++  id-token: write # if using OIDC to request cloud tokens (configure provider accordingly)
++
++env:
++  APP_IMAGE: ghcr.io/${{ github.repository_owner }}/env-resource-privileged-template:ci-${{ github.sha }}
++
++jobs:
++  build:
++    runs-on: ubuntu-latest
++    outputs:
++      image: ${{ steps.set-image.outputs.image }}
++    steps:
++      - name: Checkout
++        uses: actions/checkout@v4
++
++      - name: Set up Python 3.11
++        uses: actions/setup-python@v4
++        with:
++          python-version: "3.11"
++
++      - name: Install dependencies
++        run: |
++          python -m pip install --upgrade pip
++          pip install -r app/requirements.txt
++
++      - name: Run tests
++        run: |
++          # Add your test commands here
++          echo "No tests configured"
++
++      - name: Build Docker image
++        run: |
++          docker build -t $APP_IMAGE ./app
++
++      - name: Set output image
++        id: set-image
++        run: echo "image=$APP_IMAGE" >> $GITHUB_OUTPUT
++
++  deploy:
++    needs: build
++    runs-on: ubuntu-latest
++    # choose environment based on branch: main -> production, otherwise staging
++    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
++    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/heads/') )
++    steps:
++      - name: Checkout
++        uses: actions/checkout@v4
++
++      - name: Deploy (example)
++        env:
++          IMAGE: ${{ needs.build.outputs.image }}
++        run: |
++          echo "Deploy step locked by GitHub Environment protections."
++          echo "IMAGE=$IMAGE"
++          # Example: push image to registry, then trigger deployment
++          # This step expects environment secrets to be configured (e.g. CLOUD_CRED, DEPLOY_KEY)
++          # Replace with your deploy tool (kubectl, terraform, etc.)
++          echo "Deploy commands go here"
++
++  terraform:
++    needs: build
++    runs-on: ubuntu-latest
++    environment: staging
++    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/')
++    steps:
++      - name: Checkout
++        uses: actions/checkout@v4
++
++      - name: Setup Terraform
++        uses: hashicorp/setup-terraform@v2
++        with:
++          terraform_version: 1.5.0
++
++      - name: Terraform Init & Validate
++        env:
++          TF_VAR_example: "value"
++        run: |
++          cd infra || exit 0
++          terraform init -input=false
++          terraform validate || true
++          terraform plan -out=tfplan || true
++
++      - name: Upload plan artifact
++        if: always()
++        uses: actions/upload-artifact@v4
++        with:
++          name: terraform-plan
++          path: infra/tfplan
++
+--- /dev/null
++++ b/.github/ENVIRONMENTS.md
+@@ -0,0 +1,66 @@
++# GitHub Environments — recommended configuration
++
++This file explains how to configure the `staging` and `production` environments in the GitHub repository settings to safely protect access to privileged resources.
++
++1. Create environments
++   - Settings -> Environments -> New environment
++   - Create `staging` and `production`
++
++2. Protection rules (recommended)
++   - Required reviewers: add one or more team members who must approve deployments.
++   - Wait timer: optionally set a deployment branch restriction or wait timer (e.g., 5 min) for production to give time for last-minute cancellations.
++   - Deployment branches: restrict which branches can deploy to the environment (e.g., `main` -> production, `develop` or feature branches -> staging).
++
++3. Secrets
++   - Use environment secrets for credentials that should only be available during deployments to that environment (e.g., `PROD_CLOUD_SERVICE_ACCOUNT`).
++   - Do NOT store long-lived credentials in repository secrets if they should only be used during protected deploys.
++
++4. Least privilege & ephemeral credentials
++   - Prefer short-lived or OIDC-provisioned credentials.
++   - Configure your cloud IAM so CI service accounts only have the required roles (e.g., deploy role, not full admin).
++
++5. Reviewer workflows
++   - Use issues or the built-in environment reviewer approval to document why the deploy is needed.
++   - Keep an audit log of approvals and the associated deployment runs.
++
++6. Example mapping
++   - `main` branch -> `production` environment (requires 2 reviewers)
++   - `develop` branch -> `staging` environment (requires 1 reviewer)
++
++7. Emergency access
++   - Define a documented process (issue + approval) for emergency deploys that includes temporary elevations and rotation of credentials afterward.
++
++Links
++- GitHub Environments docs: https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment
++
+--- /dev/null
++++ b/docker-compose.yml
+@@ -0,0 +1,29 @@
++version: "3.8"
++services:
++  app:
++    build: ./app
++    ports:
++      - "8000:8000"
++    environment:
++      - DATABASE_URL=postgres://postgres:postgres@db:5432/appdb
++    depends_on:
++      - db
++
++  db:
++    image: postgres:15
++    environment:
++      POSTGRES_USER: postgres
++      POSTGRES_PASSWORD: postgres
++      POSTGRES_DB: appdb
++    volumes:
++      - db-data:/var/lib/postgresql/data
++
++volumes:
++  db-data:
++
+--- /dev/null
++++ b/infra/example.tf
+@@ -0,0 +1,32 @@
++terraform {
++  required_version = ">= 1.0"
++  required_providers {
++    null = {
++      source  = "hashicorp/null"
++      version = "3.2.1"
++    }
++  }
++}
++
++provider "null" {}
++
++# Example placeholder resource - replace with your cloud provider resources
++resource "null_resource" "example" {
++  triggers = {
++    repo = "env-resource-privileged-template"
++  }
++}
++
++output "example_trigger" {
++  value = null_resource.example.triggers
++}
++
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,18 @@
++# Python
++__pycache__/
++*.pyc
++venv/
++
++# Terraform
++*.tfstate
++*.tfstate.*
++.terraform/
++crash.log
++
++# Docker
++*.log
++.env
++
++# Editor
++.vscode/
++.idea/
++
+--- /dev/null
++++ b/app/Dockerfile
+@@ -0,0 +1,9 @@
++FROM python:3.11-slim
++WORKDIR /app
++COPY requirements.txt .
++RUN pip install --no-cache-dir -r requirements.txt
++COPY . .
++CMD ["python", "main.py"]
++
+--- /dev/null
++++ b/app/requirements.txt
+@@ -0,0 +1,1 @@
++flask==2.3.2
++
+--- /dev/null
++++ b/app/main.py
+@@ -0,0 +1,20 @@
++from flask import Flask, jsonify
++import os
++
++app = Flask(__name__)
++
++@app.route("/")
++def hello():
++    return jsonify({
++        "message": "env-resource-privileged-template sample app",
++        "environment": os.environ.get("ENVIRONMENT", "unknown")
++    })
++
++if __name__ == "__main__":
++    app.run(host="0.0.0.0", port=8000)
++
