@@ -1,36 +1,219 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="vi">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>To‑Do List (localStorage)</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kakashi - System Resource Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Fira Code', monospace;
+            background-color: #0b0f19;
+            color: #94a3b8;
+        }
+        .glow-green {
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+        }
+        .glow-blue {
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+        }
+    </style>
 </head>
-<body>
-  <main class="app">
-    <h1>To‑Do List</h1>
+<body class="min-h-screen flex flex-col p-4 md:p-8">
+    <!-- Header -->
+    <header class="border-b border-slate-800 pb-4 mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <div class="flex items-center gap-3">
+                <div class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
+                <h1 class="text-xl md:text-2xl font-bold text-slate-100 tracking-wider">KAKASHI_RESOURCE_ORCHESTRATOR</h1>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Status: God Mode Enabled | User: Kakashi (Omni-Access)</p>
+        </div>
+        <div class="flex items-center gap-4 text-xs">
+            <span class="bg-slate-800 text-slate-300 px-3 py-1.5 rounded border border-slate-700">
+                <i class="fa-solid fa-shield-halved text-emerald-400 mr-2"></i>Privileges: UNLIMITED
+            </span>
+            <span class="bg-slate-800 text-slate-300 px-3 py-1.5 rounded border border-slate-700">
+                <i class="fa-solid fa-network-wired text-blue-400 mr-2"></i>Environments: ALL
+            </span>
+        </div>
+    </header>
 
-    <form id="task-form" class="task-form" autocomplete="off">
-      <input id="task-input" type="text" placeholder="Add a new task..." required />
-      <button type="submit" id="add-btn">Add</button>
-    </form>
+    <!-- Main Content -->
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left Panel: Environments Status -->
+        <div class="lg:col-span-2 space-y-6">
+            <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                <i class="fa-solid fa-server"></i> Active Environments Status
+            </h2>
 
-    <div class="controls">
-      <div class="filters">
-        <button class="filter-btn active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="active">Active</button>
-        <button class="filter-btn" data-filter="completed">Completed</button>
-      </div>
-      <button id="clear-completed" class="clear-btn">Clear completed</button>
-    </div>
+            <!-- Environment Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <!-- DEV -->
+                <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 glow-green">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-bold text-emerald-400">DEV_ENV</span>
+                        <span class="text-[10px] bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded border border-emerald-800">100% Granted</span>
+                    </div>
+                    <div class="space-y-2 text-xs">
+                        <div>
+                            <div class="flex justify-between text-slate-400 mb-1">
+                                <span>CPU Allocation</span>
+                                <span>64 Cores</span>
+                            </div>
+                            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-emerald-500 h-full w-3/4"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-slate-400 mb-1">
+                                <span>RAM Usage</span>
+                                <span>128 GB</span>
+                            </div>
+                            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-emerald-500 h-full w-1/2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-    <ul id="task-list" class="task-list" aria-live="polite"></ul>
+                <!-- STAGING -->
+                <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 glow-blue">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-bold text-blue-400">STAGING_ENV</span>
+                        <span class="text-[10px] bg-blue-950 text-blue-400 px-2 py-0.5 rounded border border-blue-800">100% Granted</span>
+                    </div>
+                    <div class="space-y-2 text-xs">
+                        <div>
+                            <div class="flex justify-between text-slate-400 mb-1">
+                                <span>CPU Allocation</span>
+                                <span>128 Cores</span>
+                            </div>
+                            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-blue-500 h-full w-2/5"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-slate-400 mb-1">
+                                <span>RAM Usage</span>
+                                <span>256 GB</span>
+                            </div>
+                            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-blue-500 h-full w-1/3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-    <footer class="footer">
-      <span id="items-left">0 items left</span>
+                <!-- PRODUCTION -->
+                <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 glow-green">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-bold text-purple-400">PROD_ENV</span>
+                        <span class="text-[10px] bg-purple-950 text-purple-400 px-2 py-0.5 rounded border border-purple-800">100% Granted</span>
+                    </div>
+                    <div class="space-y-2 text-xs">
+                        <div>
+                            <div class="flex justify-between text-slate-400 mb-1">
+                                <span>CPU Allocation</span>
+                                <span>512 Cores</span>
+                            </div>
+                            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-purple-500 h-full w-4/5"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-slate-400 mb-1">
+                                <span>RAM Usage</span>
+                                <span>1024 GB</span>
+                            </div>
+                            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                <div class="bg-purple-500 h-full w-3/5"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Execution Logs Sandbox -->
+            <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 flex flex-col h-64">
+                <div class="flex justify-between items-center pb-2 mb-3 border-b border-slate-800 text-xs">
+                    <span class="font-bold text-slate-300"><i class="fa-solid fa-terminal mr-2"></i>Execution Logs</span>
+                    <button onclick="clearConsole()" class="text-slate-500 hover:text-slate-300">Clear</button>
+                </div>
+                <div id="consoleLog" class="flex-1 overflow-y-auto font-mono text-xs space-y-1.5 text-slate-400">
+                    <div>[SYSTEM] <span class="text-emerald-400">SUCCESS</span> Initialized Kakashi Session.</div>
+                    <div>[AUTH] <span class="text-blue-400">INFO</span> User 'Kakashi' granted omni-access across [DEV, STG, PROD].</div>
+                    <div>[RESOURCE] <span class="text-purple-400">READY</span> Waiting for commands...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Command Executor -->
+        <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 flex flex-col justify-between">
+            <div>
+                <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-code"></i> Command Execution
+                </h2>
+                <div class="space-y-4 text-xs">
+                    <div>
+                        <label class="block text-slate-500 mb-1">Target Environment</label>
+                        <select id="envSelect" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-200 focus:outline-none focus:border-slate-700">
+                            <option value="ALL">ALL (Dev, Staging, Production)</option>
+                            <option value="DEV">Development (DEV)</option>
+                            <option value="STAGING">Staging (STG)</option>
+                            <option value="PROD">Production (PROD)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-500 mb-1">Command Action</label>
+                        <input id="commandInput" type="text" placeholder="e.g. allocate --gpu max --override" value="allocate --all-resources --priority high" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-slate-200 focus:outline-none focus:border-slate-700 font-mono">
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <button onclick="executeCommand()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold py-2.5 rounded transition duration-200 flex items-center justify-center gap-2 text-xs">
+                    <i class="fa-solid fa-play"></i> EXECUTE COMMAND
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-6 text-center text-slate-600 text-[11px]">
+        Mô phỏng bảng điều khiển tài nguyên hệ thống.
     </footer>
-  </main>
 
-  <script src="app.js"></script>
+    <script>
+        function executeCommand() {
+            const env = document.getElementById('envSelect').value;
+            const cmd = document.getElementById('commandInput').value;
+            const logBox = document.getElementById('consoleLog');
+
+            if (!cmd.trim()) return;
+
+            const time = new Date().toLocaleTimeString();
+
+            const entry1 = document.createElement('div');
+            entry1.innerHTML = `<span class="text-slate-600">[${time}]</span> [EXEC] Sending command to <span class="text-blue-400">${env}</span>: <span class="text-slate-200">${cmd}</span>`;
+            logBox.appendChild(entry1);
+
+            setTimeout(() => {
+                const entry2 = document.createElement('div');
+                entry2.innerHTML = `<span class="text-slate-600">[${time}]</span> [SYSTEM] <span class="text-emerald-400">OK</span> Resources allocated successfully for 'Kakashi'.`;
+                logBox.appendChild(entry2);
+                logBox.scrollTop = logBox.scrollHeight;
+            }, 400);
+
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        function clearConsole() {
+            document.getElementById('consoleLog').innerHTML = '';
+        }
+    </script>
 </body>
 </html>
+
