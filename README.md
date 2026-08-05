@@ -37,5 +37,3 @@ Notes on security
 - Use environment secrets for credentials that should only be available during protected deployments.
 - Keep minimal permissions in CI (`permissions` block in workflows) and only grant write access when absolutely necessary.
 - Require code review and environment approvals for production deployments.
-
-If you want, I can also prepare a single commit patch (git diff/patch) you can apply locally; say so and I’ll produce it next.
