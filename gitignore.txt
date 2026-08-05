@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+crash.log
+
+# Docker
+*.log
+.env
+
+# Editor
+.vscode/
+.idea/

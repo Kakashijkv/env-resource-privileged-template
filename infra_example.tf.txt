@@ -1,0 +1,22 @@
+terraform {
+  required_version = ">= 1.0"
+  required_providers {
+    null = {
+      source  = "hashicorp/null"
+      version = "3.2.1"
+    }
+  }
+}
+
+provider "null" {}
+
+# Example placeholder resource - replace with your cloud provider resources
+resource "null_resource" "example" {
+  triggers = {
+    repo = "env-resource-privileged-template"
+  }
+}
+
+output "example_trigger" {
+  value = null_resource.example.triggers
+}
